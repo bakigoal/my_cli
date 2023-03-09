@@ -1,4 +1,4 @@
-module my_cli
+module github.com/bakigoal/my_cli
 
 go 1.19
 
