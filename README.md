@@ -41,7 +41,7 @@ tasks:
   clean:
     desc: Remove all retrieved *.png files
     cmds:
-      - rm *.png
+      - rm -rf img
 ```
 
 Usage:
