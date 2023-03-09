@@ -4,8 +4,10 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -20,41 +22,51 @@ var getCmd = &cobra.Command{
 	Run:   getCmdHandler,
 }
 
-func getCmdHandler(cmd *cobra.Command, args []string) {
+func getCmdHandler(_ *cobra.Command, args []string) {
 	var gopherName = "dr-who"
 
 	if len(args) >= 1 && args[0] != "" {
 		gopherName = args[0]
 	}
 
-	URL := "https://github.com/scraly/gophers/raw/main/" + gopherName + ".png"
-
-	fmt.Println("Try to get '" + gopherName + "' Gopher...")
-
 	// Get the data
+	URL := "https://github.com/scraly/gophers/raw/main/" + gopherName + ".png"
+	fmt.Println("Try to get '" + gopherName + "' Gopher...")
 	response, err := http.Get(URL)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer response.Body.Close()
+	logErrorIfExists(err)
+	defer logErrorIfExists(response.Body.Close())
 
 	if response.StatusCode == 200 {
-		// Create the file
-		out, err := os.Create(gopherName + ".png")
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer out.Close()
-
-		// Writer the body to file
-		_, err = io.Copy(out, response.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Println("Perfect! Just saved in " + out.Name() + "!")
+		saveImage(gopherName, response.Body)
 	} else {
 		fmt.Println("Error: " + gopherName + " not exists! :-(")
+	}
+}
+
+func saveImage(fileName string, body io.ReadCloser) {
+	// Create the file
+	mkDirIfNotExist("img")
+	out, err := os.Create("img/" + fileName + ".png")
+	logErrorIfExists(err)
+	defer logErrorIfExists(out.Close())
+
+	// Writer the body to file
+	_, err = io.Copy(out, body)
+	logErrorIfExists(err)
+
+	fmt.Println("Perfect! Just saved in " + out.Name() + "!")
+}
+
+func mkDirIfNotExist(path string) {
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		err := os.Mkdir(path, os.ModePerm)
+		logErrorIfExists(err)
+	}
+}
+
+func logErrorIfExists(err error) {
+	if err != nil {
+		log.Println(err)
 	}
 }
 
