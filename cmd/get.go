@@ -23,16 +23,9 @@ var getCmd = &cobra.Command{
 }
 
 func getCmdHandler(_ *cobra.Command, args []string) {
-	var gopherName = "dr-who"
-
-	if len(args) >= 1 && args[0] != "" {
-		gopherName = args[0]
-	}
-
-	// Get the data
-	URL := "https://github.com/scraly/gophers/raw/main/" + gopherName + ".png"
+	gopherName := getGopherName(args)
 	fmt.Println("Try to get '" + gopherName + "' Gopher...")
-	response, err := http.Get(URL)
+	response, err := http.Get("https://github.com/scraly/gophers/raw/main/" + gopherName + ".png")
 	logErrorIfExists(err)
 	defer logErrorIfExists(response.Body.Close())
 
@@ -41,6 +34,14 @@ func getCmdHandler(_ *cobra.Command, args []string) {
 	} else {
 		fmt.Println("Error: " + gopherName + " not exists! :-(")
 	}
+}
+
+func getGopherName(args []string) string {
+	var gopherName = "dr-who"
+	if len(args) >= 1 && args[0] != "" {
+		gopherName = args[0]
+	}
+	return gopherName
 }
 
 func saveImage(fileName string, body io.ReadCloser) {
